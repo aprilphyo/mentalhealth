@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DinoMind – Journaling</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #b7eacb 0%, #e0c3fc 100%);
+      background-size: 200% 200%;
+      animation: gradientMove 8s ease-in-out infinite, fadeIn 1.2s;
+      min-height: 100vh;
+      font-family: 'Segoe UI','Roboto',Arial,sans-serif;
+      color:#22543d; margin:0; padding:0;
+    }
+    @keyframes gradientMove {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes fadeIn {from{opacity:0} to{opacity:1}}
+
+    .wrap {max-width:900px; margin:0 auto; padding:28px 18px 60px;}
+    .nav {display:flex; gap:18px; justify-content:flex-end; padding:26px 6px 0;}
+    .nav a {
+      text-decoration:none; padding:10px 20px; border-radius:8px;
+      background:linear-gradient(90deg,#8fd6b3 60%,#b7eacb 100%);
+      color:#22543d; font-weight:700; letter-spacing:.4px;
+      border:1.5px solid #b7eacb; box-shadow:0 2px 8px rgba(143,214,179,.10);
+      transition:.2s transform,.2s box-shadow,.3s background,.3s color;
+    }
+    .nav a:hover {transform:translateY(-2px) scale(1.04); box-shadow:0 4px 16px rgba(143,214,179,.18)}
+
+    .card {
+      background:rgba(255,255,255,.96);
+      border:1.5px solid #b7eacb; border-radius:18px;
+      box-shadow:0 4px 18px rgba(143,214,179,.10);
+      padding:26px 24px;
+    }
+    .title {font-size:2rem; font-weight:800; margin:0 0 8px}
+    .subtitle {color:#357960; font-weight:600; margin:0 0 14px}
+
+    .prompt {
+      background:#ffffff;
+      border:1.5px solid #b7eacb; border-left:6px solid #6ec995;
+      border-radius:12px; padding:14px 16px; color:#2a5a47; font-weight:600;
+    }
+    .area {
+      width:100%; min-height:140px; margin-top:14px; padding:16px;
+      border:1.5px solid #b7eacb; border-radius:12px; resize:vertical;
+      font-size:1rem; color:#22543d; background:#fff;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,.04);
+    }
+    .controls {display:flex; gap:12px; flex-wrap:wrap; margin-top:16px}
+    .btn {
+      background:linear-gradient(90deg,#8fd6b3 60%, #b7eacb 100%);
+      color:#22543d; font-weight:700; border:none; border-radius:10px;
+      padding:12px 18px; cursor:pointer; border:1.5px solid #b7eacb;
+      transition:.2s transform,.2s box-shadow;
+    }
+    .btn:hover {transform:translateY(-2px) scale(1.03); box-shadow:0 4px 16px rgba(143,214,179,.18)}
+    .success {
+      display:none; margin-top:12px; background:#f1fff6; color:#1f6b50;
+      border-left:6px solid #6ec995; padding:12px 14px; border-radius:10px; font-weight:700;
+    }
+
+    .history {margin-top:22px}
+    .entry {
+      background:#fff; border:1.5px solid #b7eacb; border-radius:12px;
+      padding:12px 14px; margin-top:12px;
+    }
+    .entry small {color:#357960}
+
+    .row {display:flex; gap:12px; flex-wrap:wrap; margin:10px 0 0}
+    .row input[type="date"], .row input[type="number"]{
+      border:1.5px solid #b7eacb; border-radius:10px; padding:10px 12px; color:#22543d;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="journaling.html">Journal</a>
+      <a href="breathing.html">Breathing</a>
+      <a href="affirmation.html">Affirmation</a>
+      <a href="quotes.html">Quotes</a>
+    </nav>
+
+    <div class="card">
+      <h1 class="title">📓 Dino Journal</h1>
+      <p class="subtitle">Reflect, express, and grow — one tiny dino step at a time.</p>
+
+      <div class="row">
+        <input id="datePicker" type="date"/>
+        <input id="moodInput" type="number" min="1" max="10" value="5" aria-label="mood" />
+        <button class="btn" id="shufflePrompt">New Prompt</button>
+        <button class="btn" onclick="window.location.href='quotes.html?mood='+document.getElementById('moodInput').value">Get a Quote</button>
+      </div>
+
+      <div id="prompt" class="prompt" style="margin-top:12px;">What’s one thing you’re grateful for today?</div>
+      <textarea id="entry" class="area" placeholder="Write anything that’s on your mind…"></textarea>
+      <div class="controls">
+        <button class="btn" id="saveBtn">Save Entry</button>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+      <div id="savedNote" class="success">Saved! Your future self says thanks 💚</div>
+
+      <div class="history">
+        <h3 style="margin:12px 0 6px">Recent Entries</h3>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PROMPTS = [
+      "What’s one thing you’re grateful for today?",
+      "What’s a small win you had this week?",
+      "What would you tell a friend who felt the way you do now?",
+      "What’s something that brought you calm today?",
+      "What’s one thing you can let go of right now?"
+    ];
+
+    const $ = id => document.getElementById(id);
+    const historyKey = 'dino_journal_entries';
+
+    function randPrompt(){ return PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; }
+    function loadHistory(){
+      const list = $('historyList'); list.innerHTML='';
+      const data = JSON.parse(localStorage.getItem(historyKey)||'[]');
+      data.slice(0,10).forEach(it=>{
+        const d = document.createElement('div');
+        d.className='entry';
+        d.innerHTML = `<small>${it.date} • Mood ${it.mood}/10</small><div>${it.text}</div>`;
+        list.appendChild(d);
+      });
+    }
+    function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+
+    // init
+    (function(){
+      $('datePicker').value = todayISO();
+      $('shufflePrompt').addEventListener('click', ()=> $('prompt').textContent = randPrompt());
+      $('clearBtn').addEventListener('click', ()=> $('entry').value='');
+
+      $('saveBtn').addEventListener('click', ()=>{
+        const text = $('entry').value.trim();
+        if(!text){ alert('Write a little first 😊'); return; }
+        const item = {
+          date: $('datePicker').value || todayISO(),
+          mood: parseInt($('moodInput').value||'5',10),
+          text
+        };
+        const arr = JSON.parse(localStorage.getItem(historyKey)||'[]');
+        arr.unshift(item);
+        localStorage.setItem(historyKey, JSON.stringify(arr));
+        $('savedNote').style.display='block';
+        setTimeout(()=> $('savedNote').style.display='none', 2500);
+        $('entry').value='';
+        loadHistory();
+      });
+
+      loadHistory();
+    })();
+  </script>
+</body>
+</html>

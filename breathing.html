@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DinoMind – Breathing</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #b7eacb 0%, #e0c3fc 100%);
+      background-size: 200% 200%;
+      animation: gradientMove 8s ease-in-out infinite, fadeIn 1.2s;
+      min-height: 100vh; font-family:'Segoe UI','Roboto',Arial,sans-serif;
+      color:#22543d; margin:0; padding:0;
+    }
+    @keyframes gradientMove {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes fadeIn {from{opacity:0} to{opacity:1}}
+
+    .wrap {max-width:900px; margin:0 auto; padding:28px 18px 60px;}
+    .nav {display:flex; gap:18px; justify-content:flex-end; padding:26px 6px 0;}
+    .nav a {
+      text-decoration:none; padding:10px 20px; border-radius:8px;
+      background:linear-gradient(90deg,#8fd6b3 60%,#b7eacb 100%);
+      color:#22543d; font-weight:700; border:1.5px solid #b7eacb;
+      box-shadow:0 2px 8px rgba(143,214,179,.10);
+      transition:.2s transform,.2s box-shadow;
+    }
+    .nav a:hover {transform:translateY(-2px) scale(1.04); box-shadow:0 4px 16px rgba(143,214,179,.18)}
+
+    .card{background:rgba(255,255,255,.96); border:1.5px solid #b7eacb; border-radius:18px; box-shadow:0 4px 18px rgba(143,214,179,.10); padding:26px 24px; text-align:center}
+    .title{font-size:2rem; font-weight:800; margin:0 0 8px}
+    .subtitle{color:#357960; font-weight:600; margin:0 0 14px}
+
+    .circle{
+      width:170px; height:170px; border:4px solid #8fd6b3;
+      border-radius:50%; margin:16px auto 10px; display:flex; align-items:center; justify-content:center;
+      font-weight:800; color:#22543d; background:#fff; transition:transform 1s ease-in-out, border-color .4s;
+      box-shadow:0 8px 24px rgba(0,0,0,.06);
+    }
+    .inhale{transform:scale(1.25); border-color:#6ec995}
+    .hold{transform:scale(1.25); border-color:#b7eacb}
+    .exhale{transform:scale(0.85); border-color:#8fd6b3}
+
+    .btn {
+      background:linear-gradient(90deg,#8fd6b3 60%, #b7eacb 100%);
+      color:#22543d; font-weight:700; border:none; border-radius:10px;
+      padding:12px 18px; cursor:pointer; border:1.5px solid #b7eacb;
+      transition:.2s transform,.2s box-shadow; margin:6px;
+    }
+    .btn:hover {transform:translateY(-2px) scale(1.03); box-shadow:0 4px 16px rgba(143,214,179,.18)}
+    .steps {
+      text-align:left; margin:18px auto 0; max-width:560px; background:#fff; border:1.5px solid #b7eacb; border-left:6px solid #6ec995; border-radius:12px; padding:14px 16px;
+    }
+    .meta {color:#357960; margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="journaling.html">Journal</a>
+      <a href="breathing.html">Breathing</a>
+      <a href="affirmation.html">Affirmation</a>
+      <a href="quotes.html">Quotes</a>
+    </nav>
+
+    <div class="card">
+      <div style="font-size:3rem">🦖</div>
+      <h1 class="title">Calm Breathing (4-7-8)</h1>
+      <p class="subtitle">A minute of dino-calm to reset your nervous system.</p>
+
+      <div id="circle" class="circle">Ready?</div>
+      <div class="meta" id="counter"></div>
+
+      <div>
+        <button class="btn" id="start">Start</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+
+      <div class="steps">
+        <strong>How it works</strong>
+        <ol>
+          <li>Inhale through nose for <b>4</b> counts</li>
+          <li>Hold for <b>7</b> counts</li>
+          <li>Exhale through mouth for <b>8</b> counts</li>
+          <li>Repeat 4 cycles</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const circle = document.getElementById('circle');
+    const counter = document.getElementById('counter');
+    const startBtn = document.getElementById('start');
+    const resetBtn = document.getElementById('reset');
+
+    let running = false, cycles = 0, timers = [];
+
+    function clearTimers(){ timers.forEach(t=>clearInterval(t)); timers=[]; }
+    function setPhase(cls, label, secs){
+      circle.className = 'circle ' + cls;
+      let remain = secs;
+      circle.textContent = label;
+      counter.textContent = `Cycle ${cycles+1} • ${label} ${remain}s`;
+      const id = setInterval(()=>{
+        remain--; counter.textContent = `Cycle ${cycles+1} • ${label} ${remain}s`;
+        if(remain<=0) clearInterval(id);
+      }, 1000);
+      timers.push(id);
+    }
+
+    function runOnce(){
+      setPhase('inhale','Inhale',4);
+      setTimeout(()=>{
+        setPhase('hold','Hold',7);
+        setTimeout(()=>{
+          setPhase('exhale','Exhale',8);
+          setTimeout(()=>{
+            cycles++;
+            if(cycles<4 && running){ setTimeout(runOnce, 600); }
+            else { finish(); }
+          },8000);
+        },7000);
+      },4000);
+    }
+
+    function finish(){
+      circle.className='circle';
+      circle.textContent='Complete! 🌟';
+      counter.textContent='Great job — notice how your body feels now.';
+      running=false; cycles=0;
+      startBtn.disabled=false;
+    }
+
+    startBtn.onclick = ()=>{
+      if(running) return;
+      running=true; cycles=0; startBtn.disabled=true;
+      runOnce();
+    };
+    resetBtn.onclick = ()=>{
+      running=false; cycles=0; clearTimers();
+      circle.className='circle'; circle.textContent='Ready?'; counter.textContent='';
+      startBtn.disabled=false;
+    };
+  </script>
+</body>
+</html>
