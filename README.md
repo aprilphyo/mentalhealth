@@ -74,6 +74,12 @@ Therefore, quantitative metric results should be interpreted alongside qualitati
 
 [View the Mental Health Web Application](https://aprilphyo.github.io/mentalhealth/)
 
+## Application Screenshots
+
+### Homepage
+
+![DinoMind Mental Health Application](homepage.png)
+
 ## Academic Project
 
 **MSc Artificial Intelligence for Business**  
